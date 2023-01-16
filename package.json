@@ -1,0 +1,20 @@
+{
+  "name": "star-notary-v1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "solhint": "./node_modules/.bin/solhint -f table contracts/**/*.sol"
+  },
+  "devDependencies": {
+    "@truffle/hdwallet-provider": "^2.1.4",
+    "dotenv": "^16.0.3",
+    "prettier": "^2.8.2",
+    "prettier-plugin-solidity": "^1.1.1",
+    "solhint": "^3.3.7",
+    "solhint-plugin-prettier": "^0.0.5"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.8.1"
+  }
+}
