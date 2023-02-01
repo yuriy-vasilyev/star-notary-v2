@@ -18,6 +18,10 @@ contract StarNotary is ERC721 {
 
   constructor() ERC721("StarNotary", "SNT") {}
 
+  function getCurrentTokenId() public view returns (uint256) {
+    return _tokenIds.current();
+  }
+
   function createStar(string memory _name) public returns (uint256) {
     Star memory newStar = Star(_name);
 
@@ -47,12 +51,18 @@ contract StarNotary is ERC721 {
 
     require(msg.value > starCost, "You need to have enough Ether");
 
-    transferFrom(ownerAddress, msg.sender, _tokenId);
+    _transfer(ownerAddress, msg.sender, _tokenId);
 
     payable(ownerAddress).transfer(starCost);
 
     if (msg.value > starCost) {
       payable(msg.sender).transfer(msg.value - starCost);
     }
+  }
+
+  function lookUpTokenIdToStarInfo(
+    uint256 _tokenId
+  ) public view returns (string memory) {
+    return tokenIdToStarInfo[_tokenId].name;
   }
 }

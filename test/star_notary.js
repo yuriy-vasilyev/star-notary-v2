@@ -10,48 +10,54 @@ const BALANCE = web3.utils.toWei('.05', 'ether');
  * See docs: https://www.trufflesuite.com/docs/truffle/testing/writing-tests-in-javascript
  */
 contract('StarNotary', (accounts) => {
-  it('user can create a star', async () => {
+  it('can create a star', async () => {
     const instance = await StarNotary.deployed();
 
     const ownerAddress = accounts[0];
 
-    const tokenId = await instance.createStar.call(STAR_NAME, {
+    const tokenId = await instance.getCurrentTokenId.call();
+
+    await instance.createStar(STAR_NAME, {
       from: ownerAddress,
     });
 
     assert.equal(await instance.tokenIdToStarInfo.call(tokenId), STAR_NAME);
   });
 
-  it('lets owner put up star for sale', async () => {
+  it('can put up star for sale', async () => {
     const instance = await StarNotary.deployed();
     const ownerAddress = accounts[0];
 
-    const tokenId = await instance.createStar.call(STAR_NAME, {
+    const tokenId = await instance.getCurrentTokenId.call();
+
+    await instance.createStar(STAR_NAME, {
       from: ownerAddress,
     });
 
-    await instance.putStarUpForSale.call(tokenId, STAR_PRICE, {
+    await instance.putStarUpForSale(tokenId, STAR_PRICE, {
       from: ownerAddress,
     });
 
     assert.equal(await instance.starsForSale.call(tokenId), STAR_PRICE);
   });
 
-  it('lets owner get the funds after the sale', async () => {
+  it('can buy a star', async () => {
     const instance = await StarNotary.deployed();
 
     const ownerAddress = accounts[1];
     const buyerAddress = accounts[2];
 
-    const tokenId = await instance.createStar.call(STAR_NAME, {
+    const tokenId = await instance.getCurrentTokenId.call();
+
+    await instance.createStar(STAR_NAME, {
       from: ownerAddress,
     });
 
-    await instance.putStarUpForSale.call(tokenId, STAR_PRICE, {
+    await instance.putStarUpForSale(tokenId, STAR_PRICE, {
       from: ownerAddress,
     });
 
-    await instance.buyStar.call(tokenId, {
+    await instance.buyStar(tokenId, {
       from: buyerAddress,
       value: BALANCE,
     });
@@ -59,32 +65,36 @@ contract('StarNotary', (accounts) => {
     assert.equal(await instance.ownerOf.call(tokenId), buyerAddress);
   });
 
-  it('lets user buy a star and decreases its balance in ether', async () => {
+  it('owner balance increases after deal', async () => {
     const instance = await StarNotary.deployed();
 
     const ownerAddress = accounts[1];
     const buyerAddress = accounts[2];
 
-    const tokenId = await instance.createStar.call(STAR_NAME, {
+    const tokenId = await instance.getCurrentTokenId.call();
+
+    await instance.createStar(STAR_NAME, {
       from: ownerAddress,
     });
 
-    await instance.putStarUpForSale.call(tokenId, STAR_PRICE, {
+    await instance.putStarUpForSale(tokenId, STAR_PRICE, {
       from: ownerAddress,
     });
 
-    const buyerBalanceBefore = await web3.eth.getBalance(buyerAddress);
+    const ownerBalanceBefore = await web3.eth.getBalance(ownerAddress);
 
-    await instance.buyStar.call(tokenId, {
+    await instance.buyStar(tokenId, {
       from: buyerAddress,
       value: BALANCE,
-      gasPrice: 0,
+      gasPrice: web3.eth.baseFeePerGas,
     });
 
-    const buyerBalanceAfter = await web3.eth.getBalance(buyerAddress);
+    const ownerBalanceAfter = await web3.eth.getBalance(ownerAddress);
 
-    const value = Number(buyerBalanceBefore) - Number(buyerBalanceAfter);
+    const value =
+      Number(ownerBalanceAfter) -
+      Number(ownerBalanceBefore);
 
-    assert.equal(value, STAR_PRICE);
+    assert.equal(value, Number(STAR_PRICE));
   });
 });
