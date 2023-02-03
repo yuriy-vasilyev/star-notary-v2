@@ -27,15 +27,86 @@ const App = {
   },
 
   setStatus: function (message) {
-    const status = document.getElementById('status');
-    status.innerHTML = message;
+    this.statusTextEl.innerHTML = message;
+    this.statusEl.classList.remove('d-none');
+  },
+
+  clearStatus: function () {
+    this.statusEl.classList.add('d-none');
+    this.statusTextEl.innerHTML = '';
   },
 
   createStar: async function () {
-    const { createStar } = this.meta.methods;
-    const name = document.getElementById('starName').value;
-    await createStar(name).send({ from: this.account });
-    App.setStatus('New Star Owner is ' + this.account + '.');
+    this.clearStatus();
+
+    const { createStar, getCurrentTokenId } = this.meta.methods;
+    const nameInput = document.getElementById('starName');
+
+    const tokenId = await getCurrentTokenId().call();
+
+    const submitButton = this.createStarForm.querySelector('[type="submit"]');
+    submitButton.setAttribute('disabled', true);
+    const defaultLabel = submitButton.innerHTML;
+    submitButton.innerHTML =
+      '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+    await createStar(nameInput.value).send({ from: this.account });
+
+    submitButton.removeAttribute('disabled');
+    submitButton.innerHTML = defaultLabel;
+
+    this.setStatus(
+      `A new star has been created! Owner: ${this.account}, token ID: ${tokenId}`
+    );
+
+    nameInput.value = '';
+  },
+
+  lookForStar: async function () {
+    this.clearStatus();
+
+    const { lookUpTokenIdToStarInfo } = this.meta.methods;
+
+    const tokenIdEl = document.getElementById('tokenId');
+
+    const submitButton = this.lookForStarForm.querySelector('[type="submit"]');
+    submitButton.setAttribute('disabled', true);
+    const defaultLabel = submitButton.innerHTML;
+    submitButton.innerHTML =
+      '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+    const starName = await lookUpTokenIdToStarInfo(tokenIdEl.value).call();
+
+    submitButton.removeAttribute('disabled');
+    submitButton.innerHTML = defaultLabel;
+
+    this.setStatus(`The star name: ${starName}`);
+
+    tokenIdEl.value = '';
+  },
+
+  registerEvents: function () {
+    this.createStarForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      this.createStar();
+    });
+
+    this.lookForStarForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      this.lookForStar();
+    });
+  },
+
+  init: function () {
+    this.statusEl = document.getElementById('status');
+    this.statusTextEl = document.getElementById('status-text');
+
+    this.createStarForm = document.getElementById('createStarForm');
+    this.lookForStarForm = document.getElementById('lookForStarForm');
+
+    this.registerEvents();
   },
 };
 
@@ -45,7 +116,10 @@ window.addEventListener('load', async function () {
   if (window.ethereum) {
     // use MetaMask's provider
     App.web3 = new Web3(window.ethereum);
+
     await window.ethereum.enable(); // get permission to access accounts
+
+    App.init();
   } else {
     console.warn(
       'No web3 detected. Falling back to http://127.0.0.1:9545. You should remove this fallback when you deploy live'
