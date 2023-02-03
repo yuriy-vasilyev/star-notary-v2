@@ -22,6 +22,12 @@ contract StarNotary is ERC721 {
     return _tokenIds.current();
   }
 
+  function lookUpTokenIdToStarInfo(
+    uint256 _tokenId
+  ) public view returns (string memory) {
+    return tokenIdToStarInfo[_tokenId].name;
+  }
+
   function createStar(string memory _name) public returns (uint256) {
     Star memory newStar = Star(_name);
 
@@ -60,9 +66,24 @@ contract StarNotary is ERC721 {
     }
   }
 
-  function lookUpTokenIdToStarInfo(
-    uint256 _tokenId
-  ) public view returns (string memory) {
-    return tokenIdToStarInfo[_tokenId].name;
+  function exchangeStars(uint256 _tokenId1, uint256 _tokenId2) public payable {
+    address tokenId1Owner = ownerOf(_tokenId1);
+    address tokenId2Owner = ownerOf(_tokenId2);
+
+    require(
+      msg.sender == tokenId1Owner || msg.sender == tokenId2Owner,
+      "You must owe one of the stars."
+    );
+
+    _transfer(tokenId1Owner, tokenId2Owner, _tokenId1);
+    _transfer(tokenId2Owner, tokenId1Owner, _tokenId2);
+  }
+
+  function transferStar(address to, uint256 _tokenId) public payable {
+    address ownerAddress = ownerOf(_tokenId);
+
+    require(msg.sender == ownerAddress, "You are not a star owner");
+
+    _transfer(msg.sender, to, _tokenId);
   }
 }
