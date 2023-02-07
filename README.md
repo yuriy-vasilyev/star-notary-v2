@@ -18,5 +18,5 @@ You can also get a star name by token ID.
 ## Contract
 
 - Network: `Goerli`
-- Address: 0x9Cd53489343743534Adf919785D685945f32bdBd
+- Address: `0x9Cd53489343743534Adf919785D685945f32bdBd`
 - Link: https://goerli.etherscan.io/address/0x9Cd53489343743534Adf919785D685945f32bdBd
